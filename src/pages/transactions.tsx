@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/select";
 import TransactionTable from "@/components/transactions/transaction-table";
 
-// ✅ Import shared types
 import { Transaction, TransactionResponse } from "@/types";
 
 export default function Transactions() {
@@ -23,7 +22,7 @@ export default function Transactions() {
     userId: "",
   });
 
-  // ✅ Apply type from shared definitions
+  
   const { data, isLoading } = useQuery<TransactionResponse>({
     queryKey: [
       "/api/transactions",
@@ -123,13 +122,12 @@ export default function Transactions() {
         </Card>
       </div>
 
-      {/* Transactions Table */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Transactions</CardTitle>
             <div className="flex items-center space-x-2">
-              {/* Status Filter */}
+            
               <Select
                 value={filters.status || "all"}
                 onValueChange={(value) =>
@@ -150,7 +148,6 @@ export default function Transactions() {
                 </SelectContent>
               </Select>
 
-              {/* Type Filter */}
               <Select
                 value={filters.type || "all"}
                 onValueChange={(value) =>
