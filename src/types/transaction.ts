@@ -5,7 +5,7 @@ export interface Transaction {
   amount: number;
   userId: string;
   createdAt: string;
-  [key: string]: any; // fallback for unexpected props
+  [key: string]: any; 
 }
 
 export interface Pagination {
