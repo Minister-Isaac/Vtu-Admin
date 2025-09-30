@@ -18,8 +18,7 @@ export default function Landing() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground text-center">
-            Access the comprehensive VTU administration dashboard with user management, 
-            financial tracking, and transaction monitoring capabilities.
+            Gain access to a powerful VTU administration dashboard equipped with user management, financial tracking, and transaction monitoring features.
           </p>
           <Button 
             className="w-full" 

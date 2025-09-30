@@ -11,7 +11,7 @@ export default function QuickActions() {
   const [showPricingModal, setShowPricingModal] = useState(false);
 
   const handleExportReports = () => {
-    // In a real implementation, this would trigger report generation
+    
     console.log("Exporting reports...");
   };
 
