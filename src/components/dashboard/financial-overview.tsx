@@ -78,7 +78,7 @@ export default function FinancialOverview({ stats, isLoading }: FinancialOvervie
                 ₦{profit.toLocaleString('en-NG', { minimumFractionDigits: 2 })}
               </p>
               <p className="text-xs text-green-600 mt-1">
-                <i className="fas fa-arrow-up"></i> +22.8% from last month
+                <i className="fas fa-arrow-up"></i> +22% from last month
               </p>
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
