@@ -12,20 +12,54 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 
+// ✅ Define types
+interface User {
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+interface Ticket {
+  id: string;
+  title: string;
+  description: string;
+  status: "open" | "in_progress" | "resolved" | "closed";
+  priority: "low" | "normal" | "high" | "urgent";
+  adminResponse?: string;
+  createdAt: string;
+  resolvedAt?: string;
+  user?: User;
+}
+
+interface Pagination {
+  total: number;
+  totalPages: number;
+}
+
+interface TicketsResponse {
+  tickets: Ticket[];
+  pagination: Pagination;
+}
+
 export default function Support() {
   const [page, setPage] = useState(1);
-  const [selectedTicket, setSelectedTicket] = useState<any>(null);
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [showResponseModal, setShowResponseModal] = useState(false);
   const [adminResponse, setAdminResponse] = useState("");
   const { toast } = useToast();
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["/api/support/tickets", `page=${page}&limit=50`],
-    retry: false,
-  });
+  const { data, isLoading, error } = useQuery<TicketsResponse>({
+  queryKey: ["/api/support/tickets", `page=${page}&limit=50`],
+  retry: false,
+  queryFn: async () => {
+    const res = await apiRequest("GET", `/api/support/tickets?page=${page}&limit=50`);
+    const json = await res.json(); // Parse JSON first
+    return json as TicketsResponse;
+  },
+});
 
   const updateTicketMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+    mutationFn: async ({ id, data }: { id: string; data: Partial<Ticket> }) => {
       await apiRequest("PUT", `/api/support/tickets/${id}`, data);
     },
     onSuccess: () => {
@@ -59,14 +93,14 @@ export default function Support() {
   });
 
   const handleUpdateTicket = (ticketId: string, status: string, response?: string) => {
-    const updateData: any = { status };
+    const updateData: Partial<Ticket> = { status: status as Ticket["status"] };
     if (response) {
       updateData.adminResponse = response;
     }
     updateTicketMutation.mutate({ id: ticketId, data: updateData });
   };
 
-  const handleRespondToTicket = (ticket: any) => {
+  const handleRespondToTicket = (ticket: Ticket) => {
     setSelectedTicket(ticket);
     setAdminResponse(ticket.adminResponse || "");
     setShowResponseModal(true);
@@ -92,6 +126,7 @@ export default function Support() {
 
   return (
     <div className="p-6 space-y-6">
+      {/* header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground" data-testid="text-support-title">Support & Tickets</h1>
@@ -101,6 +136,7 @@ export default function Support() {
         </div>
       </div>
 
+      {/* stats cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-6">
@@ -124,7 +160,7 @@ export default function Support() {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Open Tickets</p>
                 <p className="text-2xl font-bold text-red-600" data-testid="text-open-tickets">
-                  {data?.tickets?.filter((t: any) => t.status === 'open').length || 0}
+                  {data?.tickets.filter((t) => t.status === "open").length || 0}
                 </p>
               </div>
               <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
@@ -140,7 +176,7 @@ export default function Support() {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">In Progress</p>
                 <p className="text-2xl font-bold text-yellow-600" data-testid="text-inprogress-tickets">
-                  {data?.tickets?.filter((t: any) => t.status === 'in_progress').length || 0}
+                  {data?.tickets.filter((t) => t.status === "in_progress").length || 0}
                 </p>
               </div>
               <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
@@ -156,7 +192,7 @@ export default function Support() {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Resolved</p>
                 <p className="text-2xl font-bold text-green-600" data-testid="text-resolved-tickets">
-                  {data?.tickets?.filter((t: any) => t.status === 'resolved').length || 0}
+                  {data?.tickets.filter((t) => t.status === "resolved").length || 0}
                 </p>
               </div>
               <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
@@ -167,6 +203,7 @@ export default function Support() {
         </Card>
       </div>
 
+      {/* tickets list */}
       <Card>
         <CardHeader>
           <CardTitle>Support Tickets</CardTitle>
@@ -188,16 +225,16 @@ export default function Support() {
             </div>
           ) : (
             <div className="space-y-4">
-              {data?.tickets?.map((ticket: any) => (
+              {data?.tickets.map((ticket) => (
                 <div key={ticket.id} className="border border-border rounded-lg p-4 hover:bg-accent/50" data-testid={`ticket-${ticket.id}`}>
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
                         <h3 className="text-lg font-semibold text-foreground">{ticket.title}</h3>
-                        <Badge className={statusColors[ticket.status as keyof typeof statusColors]}>
-                          {ticket.status.replace('_', ' ')}
+                        <Badge className={statusColors[ticket.status]}>
+                          {ticket.status.replace("_", " ")}
                         </Badge>
-                        <Badge className={priorityColors[ticket.priority as keyof typeof priorityColors]}>
+                        <Badge className={priorityColors[ticket.priority]}>
                           {ticket.priority}
                         </Badge>
                       </div>
@@ -222,11 +259,11 @@ export default function Support() {
                         <i className="fas fa-reply mr-2"></i>
                         Respond
                       </Button>
-                      {ticket.status !== 'resolved' && (
+                      {ticket.status !== "resolved" && (
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleUpdateTicket(ticket.id, 'in_progress')}
+                          onClick={() => handleUpdateTicket(ticket.id, "in_progress")}
                           disabled={updateTicketMutation.isPending}
                           data-testid={`button-progress-${ticket.id}`}
                         >
@@ -234,10 +271,10 @@ export default function Support() {
                           In Progress
                         </Button>
                       )}
-                      {ticket.status !== 'resolved' && (
+                      {ticket.status !== "resolved" && (
                         <Button
                           size="sm"
-                          onClick={() => handleUpdateTicket(ticket.id, 'resolved')}
+                          onClick={() => handleUpdateTicket(ticket.id, "resolved")}
                           disabled={updateTicketMutation.isPending}
                           data-testid={`button-resolve-${ticket.id}`}
                         >
@@ -273,7 +310,7 @@ export default function Support() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
                   data-testid="button-prev-page"
                 >
@@ -282,7 +319,7 @@ export default function Support() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setPage(p => p + 1)}
+                  onClick={() => setPage((p) => p + 1)}
                   disabled={page >= data.pagination.totalPages}
                   data-testid="button-next-page"
                 >
@@ -294,6 +331,7 @@ export default function Support() {
         </CardContent>
       </Card>
 
+      {/* response dialog */}
       <Dialog open={showResponseModal} onOpenChange={setShowResponseModal}>
         <DialogContent data-testid="modal-respond-ticket">
           <DialogHeader>
@@ -328,7 +366,7 @@ export default function Support() {
               <Button
                 onClick={() => {
                   if (selectedTicket && adminResponse.trim()) {
-                    handleUpdateTicket(selectedTicket.id, 'in_progress', adminResponse);
+                    handleUpdateTicket(selectedTicket.id, "in_progress", adminResponse);
                   }
                 }}
                 disabled={!adminResponse.trim() || updateTicketMutation.isPending}

@@ -1,7 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLocation } from "wouter";
 
 export default function Landing() {
+  const [, setLocation] = useLocation();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
@@ -20,9 +23,9 @@ export default function Landing() {
           <p className="text-sm text-muted-foreground text-center">
             Gain access to a powerful VTU administration dashboard equipped with user management, financial tracking, and transaction monitoring features.
           </p>
-          <Button 
-            className="w-full" 
-            onClick={() => window.location.href = '/api/login'}
+          <Button
+            className="w-full"
+            onClick={() => setLocation("/login")}
             data-testid="button-login"
           >
             <i className="fas fa-sign-in-alt mr-2"></i>
